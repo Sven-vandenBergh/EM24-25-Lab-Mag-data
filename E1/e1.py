@@ -45,6 +45,7 @@ beta = beta[0]; beta_err = np.sqrt(pcov[0][0])
 
 print(beta, beta_err)
 
+
 ######################
 #---Import-rdata-b---#
 ######################
@@ -74,6 +75,7 @@ def datb(I, gamma0, gamma1):
 gamma, pcov = curve_fit(datb, I, Bb_mean, sigma=sigma)
 gamma0, gamma1 = gamma[0], gamma[1]
 gamma0_err, gamma1_err= np.sqrt(pcov[0][0]), np.sqrt(pcov[1][1])
+
 
 ######################
 #---Import-rdata-c---#
