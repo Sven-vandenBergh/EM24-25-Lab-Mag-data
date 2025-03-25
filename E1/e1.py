@@ -41,7 +41,7 @@ def data(x, beta):
 
 #fit data
 beta, pcov = curve_fit(data, x, Ba_mean, sigma=sigma)
-beta = beta[0]; beta_err = pcov[0][0]
+beta = beta[0]; beta_err = np.sqrt(pcov[0][0])
 
 print(beta, beta_err)
 
@@ -74,9 +74,6 @@ def datb(I, gamma0, gamma1):
 gamma, pcov = curve_fit(datb, I, Bb_mean, sigma=sigma)
 gamma0, gamma1 = gamma[0], gamma[1]
 gamma0_err, gamma1_err= np.sqrt(pcov[0][0]), np.sqrt(pcov[1][1])
-
-print(Bb_mean)
-print(datb(I, gamma0, gamma1))
 
 ######################
 #---Import-rdata-c---#
@@ -133,7 +130,7 @@ ax2.errorbar(I, Bb_mean, xerr=I_err, yerr=Bb_err, fmt='o', color='#4a8c76',
             label='$B_{mean}$')
 
 #plot best fit
-ax2.plot(datb(I, gamma0, gamma1), Ba_mean, color='#4a8c76', label=f'Best fit:\n B = {gamma1:.3g}I + {gamma0:.3g}')
+ax2.plot(I, datb(I, gamma0, gamma1), color='#4a8c76', linestyle="--", label=f'Best fit:\n B = {gamma1:.3g}I + {gamma0:.3g}')
 
 #label axes
 ax2.set_xlabel('I (A)', fontsize=14)
