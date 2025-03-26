@@ -7,6 +7,7 @@ from matplotlib.pyplot import figure, show
 import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
+from matplotlib.ticker import ScalarFormatter
 
 def path_e1(filename):
     """Returns the path of a given file in predefined directory."""
@@ -26,12 +27,13 @@ PATH = path_e1(file)
 rdata_a = pd.read_csv(PATH)     #import raw data for experiment a
 
 #define x-axis
-x = rdata_a['x (cm)']
-x_err = rdata_a['x_error (cm)']
+x = rdata_a['x (cm)']*1e-2
+x_err = rdata_a['x_error (cm)']*1e-2
+print(x)
 
 #get mean and std for each row
-Ba_mean = rdata_a[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)
-Ba_err = rdata_a[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)
+Ba_mean = rdata_a[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)*1e-3
+Ba_err = rdata_a[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)*1e-3
 
 sigma = np.sqrt(x_err**2 + Ba_err**2)
 
@@ -43,7 +45,8 @@ def data(x, beta):
 beta, pcov = curve_fit(data, x, Ba_mean, sigma=sigma)
 beta = beta[0]; beta_err = np.sqrt(pcov[0][0])
 
-print(beta, beta_err)
+print("~ results a ~")
+print(f"B = {beta} +/- {beta_err}\n")
 
 
 ######################
@@ -63,18 +66,21 @@ rdata_b.columns = rdata_b.columns.str.replace('"', '').str.strip()
 I = rdata_b['I (A)']
 I_err = rdata_b['I_err (A)']
 
-Bb_mean = rdata_b[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)
-Bb_err = rdata_b[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)
+Bb_mean = rdata_b[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)*1e-3
+Bb_err = rdata_b[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)*1e-3
 
 sigma = np.sqrt(I_err**2 + Bb_err**2)
 
 def datb(I, gamma0, gamma1):
-    """Return constant beta using scipy.optimize.curve_fit"""
+    """Return constants gamma using scipy.optimize.curve_fit"""
     return gamma0 + gamma1 * I
 
-gamma, pcov = curve_fit(datb, I, Bb_mean, sigma=sigma)
+gamma, pcov = curve_fit(datb, I, Bb_mean, sigma=sigma, p0=(-0.015, 0.005))
 gamma0, gamma1 = gamma[0], gamma[1]
 gamma0_err, gamma1_err= np.sqrt(pcov[0][0]), np.sqrt(pcov[1][1])
+
+print("~ results b ~")
+print(f"B = ({gamma1} +/- {gamma1_err})*I + ({gamma0} +/- {gamma0_err})\n")
 
 
 ######################
@@ -91,11 +97,24 @@ rdata_c = pd.read_csv(PATH)     #import raw data for experiment a
 rdata_c.columns = rdata_c.columns.str.replace('"', '').str.strip()
 
 #define data points
-r = rdata_c['d (cm)']
-r_err = rdata_c['d_err (cm)']
+r = rdata_c['d (cm)']*1e-2
+r_err = rdata_c['d_err (cm)']*1e-2
 
-Bc_mean = rdata_c[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)
-Bc_err = rdata_c[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)
+Bc_mean = rdata_c[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].mean(axis=1)*1e-3
+Bc_err = rdata_c[['B trial_1 (mT)', 'B trial_2 (mT)', 'B trial_3 (mT)']].std(axis=1)*1e-3
+
+sigma = np.sqrt(r_err**2 + Bc_err**2)
+
+def datc(r, epsilon0, epsilon1):
+    """Return constants epsilon using scipy.optimize.curve_fit"""
+    return epsilon0 + epsilon1/r
+
+epsilon, pcov = curve_fit(datc, r, Bc_mean, sigma=sigma)
+epsilon0, epsilon1 = epsilon[0], epsilon[1]
+epsilon0_err, epsilon1_err = np.sqrt(pcov[0][0]), np.sqrt(pcov[1][1])
+
+print("~ results c ~")
+print(f"B = ({epsilon1} +/- {epsilon1_err})/r + ({epsilon0} +/- {epsilon0_err})\n")
 
 
 ######################
@@ -111,17 +130,19 @@ ax1.errorbar(x, Ba_mean, xerr=x_err, yerr=Ba_err, fmt='o', color='#4a728c',
             elinewidth=2, capsize=5, markerfacecolor='#4a728c', markersize=8,
             label='$B_{mean}$')
 
-#plot fit
+#plot best fit
 ax1.hlines(beta, np.asarray(x)[0], np.asarray(x)[-1], color='#4a728c', linestyle="--", label=f'Best fit:\n B = {beta:.3g} +/- {beta_err:.1g}')
 
 #label axes
-ax1.set_xlabel('x (cm)', fontsize=14)
-ax1.set_ylabel('$B_{mean}$ (mT)', fontsize=14)
+ax1.set_xlabel('x (m)', fontsize=14)
+ax1.set_ylabel('$B_{mean}$ (T)', fontsize=14)
 ax1.set_title('Magnetic Field Strength along Wire', fontsize=16)
 
 #grid and ticks
 ax1.grid(True, which='both', axis='both', linestyle='--', color='gray', alpha=0.5)
 ax1.tick_params(axis='both', which='major', labelsize=12)
+ax1.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+ax1.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 ax1.legend()
 
 
@@ -136,12 +157,14 @@ ax2.plot(I, datb(I, gamma0, gamma1), color='#4a8c76', linestyle="--", label=f'Be
 
 #label axes
 ax2.set_xlabel('I (A)', fontsize=14)
-ax2.set_ylabel('$B_{mean}$ (mT)', fontsize=14)
+ax2.set_ylabel('$B_{mean}$ (T)', fontsize=14)
 ax2.set_title('Magnetic Field Strength vs. Current', fontsize=16)
 
 #grid and ticks
 ax2.grid(True, which='both', axis='both', linestyle='--', color='gray', alpha=0.5)
 ax2.tick_params(axis='both', which='major', labelsize=12)
+ax2.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+ax2.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 ax2.legend()
 
 
@@ -151,14 +174,20 @@ ax3.errorbar(r, Bc_mean, xerr=r_err, yerr=Bc_err, fmt='o', color='darkslategrey'
             elinewidth=2, capsize=5, markerfacecolor='darkslategray', markersize=8,
             label='$B_{mean}$')
 
+#plot best fit
+ax3.plot(r, datc(r, epsilon0, epsilon1), color='darkslategrey', linestyle="--", label=f'Best fit:\n B = {epsilon1:.3g}/r + {epsilon0:.3g}')
+
 #label axes
-ax3.set_xlabel('r (cm)', fontsize=14)
-ax3.set_ylabel('$B_{mean}$ (mT)', fontsize=14)
+ax3.set_xlabel('r (m)', fontsize=14)
+ax3.set_ylabel('$B_{mean}$ (T)', fontsize=14)
 ax3.set_title('Magnetic Field Strength vs. Distance from Wire', fontsize=16)
 
 #grid and ticks
 ax3.grid(True, which='both', axis='both', linestyle='--', color='gray', alpha=0.5)
 ax3.tick_params(axis='both', which='major', labelsize=12)
+ax3.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+ax3.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+ax3.legend()
 
 fig.subplots_adjust(hspace=0.4)
 fig.tight_layout()
