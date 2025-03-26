@@ -1,0 +1,3 @@
+"I (A)", "I_err (A)", "z (cm)", "z_err (cm)", "F trial_1 (parallel, N)", "F trial_2 (parallel, N)", "F trial_3 (parallel, N)", "F trial_1 (anti-parallel, N)", "F trial_2 (anti-parallel, N)", "F trial_3 (anti-parallel, N)"
+1,0.005,0,0.25,0.080,0.080,0.080,0.065,0.067,0.068
+1,0.005,5,0.25,0.082,0.082,0.083,0.076,0.076,0.076
